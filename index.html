@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>運動課程打卡</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<style>
+  :root { --c:#0b7a5a; --c2:#e6f4ef; --bd:#e1e6e4; --tx:#1f2a27; --mu:#6b7a75; --red:#c0392b; --bg:#f4f6f5; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; background:var(--bg); color:var(--tx); font-size:16px; padding-bottom:76px; }
+  header { background:var(--c); color:#fff; padding:16px 16px 14px; }
+  header h1 { margin:0; font-size:18px; font-weight:600; }
+  header .sub { font-size:13px; opacity:.85; margin-top:2px; }
+  main { padding:14px 16px; }
+  .card { background:#fff; border:1px solid var(--bd); border-radius:14px; padding:14px; margin-bottom:12px; }
+  .card h3 { margin:0 0 4px; font-size:16px; }
+  .mu { color:var(--mu); font-size:13px; }
+  .tag { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; background:#eef1f0; color:var(--mu); vertical-align:middle; }
+  .t-出席,.t-上課中 { background:#e3f5ec; color:#11704b; } .t-停課,.t-缺席 { background:#fbe7e5; color:var(--red); }
+  .t-未打卡 { background:#fff0d6; color:#a25f00; }
+  .punch { display:grid; grid-template-columns:1fr; margin-top:12px; }
+  .pbtn { border:0; border-radius:12px; padding:14px 6px; font-size:16px; font-weight:600; background:var(--c); color:#fff; }
+  .pbtn:disabled { background:#e5e9e8; color:#8a9692; font-weight:500; }
+  .pbtn small { display:block; font-size:12px; font-weight:400; margin-top:3px; }
+  .b { border:0; border-radius:10px; padding:10px 14px; font-size:15px; background:var(--c); color:#fff; }
+  .b.g { background:#fff; color:var(--c); border:1px solid var(--c); }
+  .b.r { background:#fff; color:var(--red); border:1px solid var(--red); }
+  .b:disabled { opacity:.5; }
+  input { width:100%; font-size:16px; padding:11px 12px; border:1px solid var(--bd); border-radius:10px; margin:6px 0 12px; }
+  .tabs { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--bd); display:flex; padding-bottom:env(safe-area-inset-bottom); }
+  .tabs button { flex:1; border:0; background:none; padding:12px 0 10px; font-size:14px; color:var(--mu); }
+  .tabs button.on { color:var(--c); font-weight:600; }
+  .tabs i { display:block; font-style:normal; font-size:20px; line-height:1.1; }
+  .sum { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
+  .sum div { background:#fff; border:1px solid var(--bd); border-radius:12px; padding:10px; text-align:center; }
+  .sum b { display:block; font-size:22px; color:var(--c); }
+  .sum span { font-size:12px; color:var(--mu); }
+  .li { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--bd); gap:8px; }
+  .li:last-child { border-bottom:0; }
+  .empty { text-align:center; color:var(--mu); padding:30px 10px; }
+  #toast { position:fixed; left:16px; right:16px; bottom:90px; background:#222; color:#fff; padding:12px 14px; border-radius:10px; z-index:9; display:none; text-align:center; }
+  #toast.err { background:var(--red); } #toast.ok { background:var(--c); }
+  .row { display:flex; gap:8px; align-items:center; }
+  .hide { display:none !important; }
+  .chips { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
+  .chips span { font-size:12px; background:var(--c2); color:var(--c); border-radius:6px; padding:2px 6px; }
+</style>
+</head>
+<body>
+<header><h1>運動課程打卡</h1><div class="sub" id="sub">載入中…</div></header>
+<main id="app"><div class="empty">載入中…</div></main>
+<nav class="tabs hide" id="tabs">
+  <button data-t="home" class="on"><i>⏱</i>打卡</button>
+  <button data-t="courses"><i>📋</i>報名</button>
+  <button data-t="history"><i>📊</i>我的紀錄</button>
+</nav>
+<div id="toast"></div>
+
+<script>
+/* ===================== 設定（部署時修改這兩行） ===================== */
+const LIFF_ID = '2012537462-TilDY25G';
+const API_URL = 'https://script.google.com/macros/s/AKfycbw_habqGuSHhLJ2KmI2BmXX-AOvUp_HXn4CyyhgDF5xNX96vczCK2Z28lXN6Hll8hc/exec';
+/* =================================================================== */
+
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const WD = ['日','一','二','三','四','五','六'];
+const wd = d => WD[new Date(d + 'T12:00:00+08:00').getUTCDay()];
+const money = n => (Number(n) || 0).toLocaleString('zh-TW');
+const todayStr = () => new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+const params = new URLSearchParams(location.search);
+const TEST_ID = params.get('test'); // 測試模式：?test=員工LINE測試代號（後台「測試模式」需設為「是」）
+let ID_TOKEN = null, CONFIG = {}, ME = null, TAB = 'home';
+
+function toast(msg, type) {
+  const t = $('#toast'); t.textContent = msg; t.className = type || ''; t.style.display = 'block';
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', type === 'err' ? 5000 : 2800);
+}
+
+async function api(action, data) {
+  const body = Object.assign({ action, idToken: ID_TOKEN, testUserId: TEST_ID || undefined }, data || {});
+  let r;
+  try {
+    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+    r = await res.json();
+  } catch (e) { throw new Error('網路連線失敗，請稍後再試'); }
+  if (!r.ok) {
+    if (r.code === 'TOKEN_EXPIRED' && window.liff && !TEST_ID) { liff.logout(); liff.login({ redirectUri: location.href }); }
+    if (r.code === 'NOT_BOUND') { showBind(); }
+    const err = new Error(r.error); err.code = r.code; throw err;
+  }
+  return r.data;
+}
+
+async function init() {
+  try {
+    if (!TEST_ID) {
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+      ID_TOKEN = liff.getIDToken();
+    }
+    const me = await api('me');
+    CONFIG = me.config || {};
+    if (!me.bound) { $('#sub').textContent = (me.lineName || '') + '，請先綁定員工資料'; showBind(); return; }
+    setMe(me.employee);
+    show('home');
+  } catch (e) {
+    app.innerHTML = `<div class="card"><h3>無法開啟</h3><div class="mu">${esc(e.message)}</div></div>`;
+  }
+}
+function setMe(emp) { ME = emp; $('#sub').textContent = `${emp.name}（${emp.empId}）${emp.dept ? '｜' + emp.dept : ''}`; $('#tabs').classList.remove('hide'); }
+
+/* ---------- 綁定 ---------- */
+function showBind() {
+  $('#tabs').classList.add('hide');
+  app.innerHTML = `<div class="card"><h3>綁定員工資料</h3>
+    <div class="mu" style="margin-bottom:10px">第一次使用請輸入員工編號與姓名，綁定後這支手機的 LINE 就能打卡。每人只能綁定一支手機，換手機請洽管理者。</div>
+    <label class="mu">員工編號</label><input id="bi" autocomplete="off" autocapitalize="characters">
+    <label class="mu">姓名</label><input id="bn" autocomplete="off">
+    <button class="b" id="bb" style="width:100%">綁定</button></div>`;
+  $('#bb').onclick = async () => {
+    $('#bb').disabled = true;
+    try { const r = await api('bind', { empId: $('#bi').value, name: $('#bn').value }); setMe(r.employee); toast('綁定成功', 'ok'); show('home'); }
+    catch (e) { if (e.code !== 'NOT_BOUND') toast(e.message, 'err'); $('#bb').disabled = false; }
+  };
+}
+
+/* ---------- 分頁 ---------- */
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => show(b.dataset.t));
+function show(t) {
+  TAB = t;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  window.scrollTo(0, 0);
+  ({ home: viewHome, courses: viewCourses, history: viewHistory })[t]();
+}
+
+/* ---------- 打卡 ---------- */
+async function viewHome() {
+  app.innerHTML = '<div class="empty">載入中…</div>';
+  try {
+    const d = await api('home');
+    if (!d.sessions.length) { app.innerHTML = '<div class="empty">近兩週沒有您的課程<br><br><button class="b g" onclick="show(\'courses\')">去報名課程</button></div>'; return; }
+    const t = todayStr();
+    app.innerHTML = d.sessions.map(s => `
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>${esc(s.courseName)}</h3>${s.status !== '未開始' ? `<span class="tag t-${esc(s.status)}">${esc(s.status)}</span>` : ''}</div>
+        <div class="mu">${s.date === t ? '<b style="color:var(--c)">今天</b>' : s.date}（${wd(s.date)}）${s.start}–${s.end}${s.location ? '｜' + esc(s.location) : ''}</div>
+        ${s.note ? `<div class="mu">${esc(s.note)}</div>` : ''}
+        <div class="punch">
+          <button class="pbtn" data-p="${s.sessionId}" ${s.canIn ? '' : 'disabled'}>上課打卡<small>${s.inTime ? '✓ 已打卡 ' + s.inTime.slice(11, 16) : esc(s.hint)}</small></button>
+        </div>
+        <div class="mu" style="margin-top:8px">打卡時間 ${s.windowText}・名單 ${s.rosterCount} 人・每人分攤約 ${money(s.share)} 元</div>
+      </div>`).join('');
+    app.querySelectorAll('[data-p]').forEach(b => b.onclick = () => punch(b));
+  } catch (e) { if (e.code !== 'NOT_BOUND') app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+function getPosition() {
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej(new Error('此手機不支援定位'));
+    navigator.geolocation.getCurrentPosition(p => res(p.coords), e => {
+      rej(new Error(e.code === 1 ? '請允許 LINE 使用定位權限（設定 > LINE > 位置）後再試' : '無法取得定位，請到空曠處或開啟 GPS 後再試'));
+    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+  });
+}
+
+async function punch(btn) {
+  const sessionId = btn.dataset.p, type = 'in';
+  const label = btn.firstChild.textContent;
+  btn.disabled = true; btn.firstChild.textContent = '定位中…';
+  try {
+    let pos = {};
+    if (CONFIG.needLocation) { const c = await getPosition(); pos = { lat: c.latitude, lng: c.longitude, accuracy: c.accuracy }; }
+    btn.firstChild.textContent = '送出中…';
+    const r = await api('punch', Object.assign({ sessionId, type }, pos));
+    toast(r.message, 'ok');
+    viewHome();
+  } catch (e) {
+    toast(e.message, 'err'); btn.disabled = false; btn.firstChild.textContent = label;
+  }
+}
+
+/* ---------- 報名 ---------- */
+async function viewCourses() {
+  app.innerHTML = '<div class="empty">載入中…</div>';
+  try {
+    const d = await api('courses');
+    if (!d.courses.length) { app.innerHTML = '<div class="empty">目前沒有開放報名的課程</div>'; return; }
+    app.innerHTML = d.courses.map(c => `
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>${esc(c.name)}</h3>
+          ${c.mine ? '<span class="tag t-出席">已報名</span>' : c.full ? '<span class="tag t-停課">額滿</span>' : `<span class="tag">${esc(c.status)}</span>`}</div>
+        <div class="mu">${c.teacher ? '老師：' + esc(c.teacher) + '｜' : ''}${esc(c.location)}</div>
+        <div class="mu">共 ${c.sessionCount} 堂｜每堂費用 ${money(c.fee)} 元（依名單人數分攤）｜已報名 ${c.enrolled}${c.capacity ? ' / ' + c.capacity : ''} 人</div>
+        ${c.deadline ? `<div class="mu">報名截止：${esc(c.deadline.replace('T', ' '))}</div>` : ''}
+        ${c.note ? `<div class="mu">${esc(c.note)}</div>` : ''}
+        ${c.sessions.length ? `<div class="chips">${c.sessions.slice(0, 12).map(s => `<span>${s.date.slice(5).replace('-', '/')}(${wd(s.date)}) ${s.start}</span>`).join('')}${c.sessions.length > 12 ? '<span>…</span>' : ''}</div>` : ''}
+        <div style="margin-top:12px">
+          ${c.mine ? (c.canCancel ? `<button class="b r" data-u="${c.courseId}">取消報名</button>` : '<span class="mu">已截止，如需異動請洽管理者</span>')
+            : `<button class="b" data-e="${c.courseId}" ${c.full || c.status !== '開放報名' ? 'disabled' : ''}>我要報名</button>`}
+        </div>
+      </div>`).join('');
+    app.querySelectorAll('[data-e]').forEach(b => b.onclick = async () => {
+      b.disabled = true;
+      try { const r = await api('enroll', { courseId: b.dataset.e }); toast(r.message, 'ok'); viewCourses(); } catch (e) { toast(e.message, 'err'); b.disabled = false; }
+    });
+    app.querySelectorAll('[data-u]').forEach(b => b.onclick = async () => {
+      if (!confirm('確定取消報名？')) return;
+      b.disabled = true;
+      try { const r = await api('unenroll', { courseId: b.dataset.u }); toast(r.message, 'ok'); viewCourses(); } catch (e) { toast(e.message, 'err'); b.disabled = false; }
+    });
+  } catch (e) { if (e.code !== 'NOT_BOUND') app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+/* ---------- 我的紀錄 ---------- */
+async function viewHistory(from, to) {
+  const t = todayStr();
+  from = from || t.slice(0, 8) + '01'; to = to || t;
+  app.innerHTML = '<div class="empty">載入中…</div>';
+  try {
+    const d = await api('history', { from, to });
+    const s = d.summary;
+    app.innerHTML = `
+      <div class="card"><div class="row"><input type="date" id="hf" value="${d.from}" style="margin:0"><span>～</span><input type="date" id="ht" value="${d.to}" style="margin:0"></div>
+        <div class="row" style="margin-top:8px"><button class="b g" id="hm">本月</button><button class="b g" id="hp">上個月</button><button class="b" id="hq" style="margin-left:auto">查詢</button></div></div>
+      <div class="sum"><div><b>${s.attended}</b><span>出席次數</span></div><div><b>${s.absent}</b><span>缺席</span></div><div><b>${money(s.fee)}</b><span>費用（元）</span></div></div>
+      <div class="card">${d.details.length ? d.details.map(x => `
+        <div class="li"><div><div>${esc(x.courseName)}</div><div class="mu">${x.date}（${wd(x.date)}）${x.start}–${x.end}
+          ${x.inTime ? `<br>打卡 ${x.inTime.slice(11, 16)}` : ''}</div></div>
+          <div style="text-align:right"><span class="tag t-${esc(x.status)}">${esc(x.status)}</span><div class="mu">${x.fee ? money(x.fee) + ' 元' : ''}</div></div></div>`).join('')
+        : '<div class="empty">這段期間沒有上課紀錄</div>'}</div>
+      <div class="mu" style="text-align:center">費用＝每堂費用 ÷ 名單人數（無條件進位），打卡時間結束後才結算</div>`;
+    $('#hq').onclick = () => viewHistory($('#hf').value, $('#ht').value);
+    $('#hm').onclick = () => viewHistory(t.slice(0, 8) + '01', t);
+    $('#hp').onclick = () => {
+      const d0 = new Date(t.slice(0, 8) + '01T12:00:00+08:00'); d0.setUTCDate(0);
+      const last = d0.toISOString().slice(0, 10); viewHistory(last.slice(0, 8) + '01', last);
+    };
+  } catch (e) { if (e.code !== 'NOT_BOUND') app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+init();
+</script>
+</body>
+</html>
