@@ -103,7 +103,7 @@ async function init() {
     }
     const me = await api('me');
     CONFIG = me.config || {};
-    if (!me.bound) { $('#sub').textContent = (me.lineName || '') + '，請先綁定員工資料'; showBind(); return; }
+    if (!me.bound) { $('#sub').textContent = (me.lineName || '') + '，請先完成註冊'; showBind(); return; }
     setMe(me.employee);
     show('home');
   } catch (e) {
@@ -115,14 +115,19 @@ function setMe(emp) { ME = emp; $('#sub').textContent = `${emp.name}（${emp.emp
 /* ---------- 綁定 ---------- */
 function showBind() {
   $('#tabs').classList.add('hide');
-  app.innerHTML = `<div class="card"><h3>綁定員工資料</h3>
-    <div class="mu" style="margin-bottom:10px">第一次使用請輸入員工編號與姓名，綁定後這支手機的 LINE 就能打卡。每人只能綁定一支手機，換手機請洽管理者。</div>
-    <label class="mu">員工編號</label><input id="bi" autocomplete="off" autocapitalize="characters">
-    <label class="mu">姓名</label><input id="bn" autocomplete="off">
-    <button class="b" id="bb" style="width:100%">綁定</button></div>`;
+  app.innerHTML = `<div class="card"><h3>註冊員工資料</h3>
+    <div class="mu" style="margin-bottom:10px">第一次使用請填寫以下資料，完成後這支手機的 LINE 就能打卡。請填寫本人的員工編號，每個員工編號只能註冊一次；換手機請洽管理者。</div>
+    <label class="mu">員工編號（5 碼數字）</label><input id="bi" autocomplete="off" inputmode="numeric" maxlength="5" pattern="\\d{5}">
+    <label class="mu">姓名</label><input id="bn" autocomplete="off" maxlength="20">
+    <label class="mu">單位（選填）</label><input id="bd" autocomplete="off" maxlength="30">
+    <button class="b" id="bb" style="width:100%">送出註冊</button></div>`;
   $('#bb').onclick = async () => {
+    const empId = $('#bi').value.trim(), name = $('#bn').value.trim();
+    if (!/^\d{5}$/.test(empId)) return toast('員工編號需為 5 碼數字', 'err');
+    if (!name) return toast('請輸入姓名', 'err');
+    if (!confirm(`請確認資料正確：\n員工編號：${empId}\n姓名：${name}\n\n送出後如需修改請洽管理者。`)) return;
     $('#bb').disabled = true;
-    try { const r = await api('bind', { empId: $('#bi').value, name: $('#bn').value }); setMe(r.employee); toast('綁定成功', 'ok'); show('home'); }
+    try { const r = await api('bind', { empId, name, dept: $('#bd').value.trim() }); setMe(r.employee); toast('註冊成功', 'ok'); show('home'); }
     catch (e) { if (e.code !== 'NOT_BOUND') toast(e.message, 'err'); $('#bb').disabled = false; }
   };
 }
