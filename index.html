@@ -17,8 +17,8 @@
   .card h3 { margin:0 0 4px; font-size:16px; }
   .mu { color:var(--mu); font-size:13px; }
   .tag { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; background:#eef1f0; color:var(--mu); vertical-align:middle; }
-  .t-出席,.t-上課中 { background:#e3f5ec; color:#11704b; } .t-停課,.t-缺席 { background:#fbe7e5; color:var(--red); }
-  .t-未打卡 { background:#fff0d6; color:#a25f00; }
+  .t-出席,.t-上課中,.t-已開課 { background:#e3f5ec; color:#11704b; } .t-停課,.t-缺席,.t-未成團 { background:#fbe7e5; color:var(--red); }
+  .t-未打卡,.t-招生中 { background:#fff0d6; color:#a25f00; }
   .punch { display:grid; grid-template-columns:1fr; margin-top:12px; }
   .pbtn { border:0; border-radius:12px; padding:14px 6px; font-size:16px; font-weight:600; background:var(--c); color:#fff; }
   .pbtn:disabled { background:#e5e9e8; color:#8a9692; font-weight:500; }
@@ -45,17 +45,36 @@
   .hide { display:none !important; }
   .chips { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
   .chips span { font-size:12px; background:var(--c2); color:var(--c); border-radius:6px; padding:2px 6px; }
+  header { position:relative; }
+  .nbtn { position:absolute; right:12px; top:14px; background:rgba(255,255,255,.18); color:#fff; border:0; border-radius:16px; padding:6px 10px; font-size:13px; }
+  .sess { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--bd); }
+  .sess:last-child { border-bottom:0; }
+  .sess input[type=checkbox] { width:22px; height:22px; margin:0; flex:none; }
+  .sess .grow { flex:1; min-width:0; }
+  .names { font-size:13px; color:var(--tx); background:var(--bg); border-radius:8px; padding:6px 8px; margin-top:6px; line-height:1.6; }
+  .names span { display:inline-block; margin-right:10px; white-space:nowrap; }
+  .names em { font-style:normal; color:var(--mu); font-size:12px; }
+  .btns { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .btns .b { flex:1; }
+  #notice { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:20; display:none; align-items:flex-end; }
+  #notice .box { background:#fff; width:100%; max-height:88vh; overflow:auto; border-radius:16px 16px 0 0; padding:18px 16px calc(16px + env(safe-area-inset-bottom)); }
+  #notice h3 { margin:0 0 10px; font-size:17px; }
+  #notice ol { margin:0 0 14px; padding-left:22px; line-height:1.65; font-size:15px; }
+  #notice li { margin-bottom:6px; }
 </style>
 </head>
 <body>
-<header><h1>運動課程打卡</h1><div class="sub" id="sub">載入中…</div></header>
+<header><h1>運動課程打卡</h1><div class="sub" id="sub">載入中…</div><button class="nbtn hide" id="nbtn">📋 注意事項</button></header>
 <main id="app"><div class="empty">載入中…</div></main>
 <nav class="tabs hide" id="tabs">
   <button data-t="home" class="on"><i>⏱</i>打卡</button>
-  <button data-t="courses"><i>📋</i>報名</button>
+  <button data-t="courses"><i>✍️</i>報名</button>
+  <button data-t="opened"><i>👥</i>開課名單</button>
   <button data-t="history"><i>📊</i>我的紀錄</button>
 </nav>
 <div id="toast"></div>
+<div id="notice"><div class="box"><h3>員工運動課程注意事項</h3><ol id="nlist"></ol>
+  <button class="b" id="nok" style="width:100%">我已閱讀</button></div></div>
 
 <script>
 /* ===================== 設定（部署時修改這兩行） ===================== */
@@ -72,7 +91,7 @@ const money = n => (Number(n) || 0).toLocaleString('zh-TW');
 const todayStr = () => new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
 const params = new URLSearchParams(location.search);
 const TEST_ID = params.get('test'); // 測試模式：?test=員工LINE測試代號（後台「測試模式」需設為「是」）
-let ID_TOKEN = null, CONFIG = {}, ME = null, TAB = 'home';
+let ID_TOKEN = null, CONFIG = {}, ME = null, TAB = 'home', NOTICE = [], NOTICE_READ = false;
 
 function toast(msg, type) {
   const t = $('#toast'); t.textContent = msg; t.className = type || ''; t.style.display = 'block';
@@ -103,6 +122,7 @@ async function init() {
     }
     const me = await api('me');
     CONFIG = me.config || {};
+    NOTICE = me.notice || []; NOTICE_READ = !!me.noticeRead;
     if (!me.bound) { $('#sub').textContent = (me.lineName || '') + '，請先完成註冊'; showBind(); return; }
     setMe(me.employee);
     show('home');
@@ -110,7 +130,29 @@ async function init() {
     app.innerHTML = `<div class="card"><h3>無法開啟</h3><div class="mu">${esc(e.message)}</div></div>`;
   }
 }
-function setMe(emp) { ME = emp; $('#sub').textContent = `${emp.name}（${emp.empId}）${emp.dept ? '｜' + emp.dept : ''}`; $('#tabs').classList.remove('hide'); }
+function setMe(emp) { ME = emp; $('#sub').textContent = `${emp.name}（${emp.empId}）${emp.dept ? '｜' + emp.dept : ''}`; $('#tabs').classList.remove('hide'); $('#nbtn').classList.remove('hide'); }
+
+/* ---------- 注意事項 ---------- */
+// 按右上角按鈕可隨時查看；第一次報名前必須按「我已閱讀」
+function showNotice(mustAck) {
+  return new Promise(resolve => {
+    $('#nlist').innerHTML = NOTICE.length ? NOTICE.map(l => `<li>${esc(l)}</li>`).join('') : '<li>（管理者尚未設定注意事項）</li>';
+    const ok = $('#nok');
+    ok.textContent = mustAck ? '我已閱讀，繼續報名' : (NOTICE_READ ? '關閉' : '我已閱讀');
+    $('#notice').style.display = 'flex';
+    $('#notice').onclick = e => { if (e.target.id === 'notice' && !mustAck) { $('#notice').style.display = 'none'; resolve(false); } };
+    ok.onclick = async () => {
+      if (!NOTICE_READ) {
+        ok.disabled = true;
+        try { await api('ackNotice'); NOTICE_READ = true; } catch (e) { toast(e.message, 'err'); ok.disabled = false; return; }
+        ok.disabled = false;
+      }
+      $('#notice').style.display = 'none'; resolve(true);
+    };
+  });
+}
+$('#nbtn').onclick = () => showNotice(false);
+async function ensureNotice() { if (NOTICE_READ) return true; return showNotice(true); }
 
 /* ---------- 綁定 ---------- */
 function showBind() {
@@ -127,7 +169,11 @@ function showBind() {
     if (!name) return toast('請輸入姓名', 'err');
     if (!confirm(`請確認資料正確：\n員工編號：${empId}\n姓名：${name}\n\n送出後如需修改請洽管理者。`)) return;
     $('#bb').disabled = true;
-    try { const r = await api('bind', { empId, name, dept: $('#bd').value.trim() }); setMe(r.employee); toast('註冊成功', 'ok'); show('home'); }
+    try {
+      const r = await api('bind', { empId, name, dept: $('#bd').value.trim() }); setMe(r.employee); toast('註冊成功', 'ok');
+      const me = await api('me'); NOTICE = me.notice || []; NOTICE_READ = !!me.noticeRead;
+      show('home'); if (!NOTICE_READ) showNotice(false);
+    }
     catch (e) { if (e.code !== 'NOT_BOUND') toast(e.message, 'err'); $('#bb').disabled = false; }
   };
 }
@@ -138,7 +184,7 @@ function show(t) {
   TAB = t;
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   window.scrollTo(0, 0);
-  ({ home: viewHome, courses: viewCourses, history: viewHistory })[t]();
+  ({ home: viewHome, courses: viewCourses, opened: viewOpened, history: viewHistory })[t]();
 }
 
 /* ---------- 打卡 ---------- */
@@ -150,16 +196,27 @@ async function viewHome() {
     const t = todayStr();
     app.innerHTML = d.sessions.map(s => `
       <div class="card">
-        <div class="row" style="justify-content:space-between"><h3>${esc(s.courseName)}</h3>${s.status !== '未開始' ? `<span class="tag t-${esc(s.status)}">${esc(s.status)}</span>` : ''}</div>
+        <div class="row" style="justify-content:space-between"><h3>${esc(s.courseName)}</h3>${homeTag(s)}</div>
         <div class="mu">${s.date === t ? '<b style="color:var(--c)">今天</b>' : s.date}（${wd(s.date)}）${s.start}–${s.end}${s.location ? '｜' + esc(s.location) : ''}</div>
         ${s.note ? `<div class="mu">${esc(s.note)}</div>` : ''}
         <div class="punch">
           <button class="pbtn" data-p="${s.sessionId}" ${s.canIn ? '' : 'disabled'}>上課打卡<small>${s.inTime ? '✓ 已打卡 ' + s.inTime.slice(11, 16) : esc(s.hint)}</small></button>
         </div>
-        <div class="mu" style="margin-top:8px">打卡時間 ${s.windowText}・名單 ${s.rosterCount} 人・每人分攤約 ${money(s.share)} 元</div>
+        <div class="mu" style="margin-top:8px">${s.cancelled ? '' : `打卡時間 ${s.windowText}・`}名單 ${s.rosterCount} 人${s.minCount ? '（' + s.minCount + ' 人開課）' : ''}${s.cancelled ? '' : `・每人分攤約 ${money(s.share)} 元`}</div>
       </div>`).join('');
     app.querySelectorAll('[data-p]').forEach(b => b.onclick = () => punch(b));
   } catch (e) { if (e.code !== 'NOT_BOUND') app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+function homeTag(s) {
+  if (s.cancelled) return `<span class="tag t-${s.open === '未成團' ? '未成團' : '停課'}">${esc(s.cancelText || s.status)}</span>`;
+  if (s.open === '招生中') return `<span class="tag t-招生中">尚未達開課人數</span>`;
+  return s.status !== '未開始' ? `<span class="tag t-${esc(s.status)}">${esc(s.status)}</span>` : '<span class="tag t-已開課">已開課</span>';
+}
+
+function namesHtml(names) {
+  if (!names || !names.length) return '';
+  return `<div class="names">${names.map(n => `<span>${esc(n.name)}${n.dept ? ' <em>' + esc(n.dept) + '</em>' : ''}</span>`).join('')}</div>`;
 }
 
 function getPosition() {
@@ -188,34 +245,75 @@ async function punch(btn) {
 }
 
 /* ---------- 報名 ---------- */
+// 每門課列出本期可報名的場次：可「報名整期」或勾選單堂；報名後不可自行取消
 async function viewCourses() {
   app.innerHTML = '<div class="empty">載入中…</div>';
   try {
     const d = await api('courses');
     if (!d.courses.length) { app.innerHTML = '<div class="empty">目前沒有開放報名的課程</div>'; return; }
-    app.innerHTML = d.courses.map(c => `
-      <div class="card">
+    app.innerHTML = `<div class="mu" style="margin:0 2px 10px">⚠️ 報名後不可取消，無法上課請找同事代課，或先把費用交給班長。<a href="#" id="nlink">看注意事項</a></div>` +
+      d.courses.map(c => {
+        const left = c.sessions.filter(s => !s.mine && !s.full);
+        return `<div class="card" data-c="${c.courseId}">
         <div class="row" style="justify-content:space-between"><h3>${esc(c.name)}</h3>
-          ${c.mine ? '<span class="tag t-出席">已報名</span>' : c.full ? '<span class="tag t-停課">額滿</span>' : `<span class="tag">${esc(c.status)}</span>`}</div>
-        <div class="mu">${c.teacher ? '老師：' + esc(c.teacher) + '｜' : ''}${esc(c.location)}</div>
-        <div class="mu">共 ${c.sessionCount} 堂｜每堂費用 ${money(c.fee)} 元（依名單人數分攤）｜已報名 ${c.enrolled}${c.capacity ? ' / ' + c.capacity : ''} 人</div>
+          ${c.mineCount ? `<span class="tag t-出席">已報 ${c.mineCount} 堂</span>` : ''}</div>
+        <div class="mu">${c.teacher ? '老師：' + esc(c.teacher) : ''}${c.location ? '｜' + esc(c.location) : ''}</div>
+        <div class="mu">每堂 ${money(c.fee)} 元，依人數均分（無條件進位）${c.minCount ? `｜${c.minCount} 人以上開課` : ''}</div>
         ${c.deadline ? `<div class="mu">報名截止：${esc(c.deadline.replace('T', ' '))}</div>` : ''}
-        ${c.note ? `<div class="mu">${esc(c.note)}</div>` : ''}
-        ${c.sessions.length ? `<div class="chips">${c.sessions.slice(0, 12).map(s => `<span>${s.date.slice(5).replace('-', '/')}(${wd(s.date)}) ${s.start}</span>`).join('')}${c.sessions.length > 12 ? '<span>…</span>' : ''}</div>` : ''}
-        <div style="margin-top:12px">
-          ${c.mine ? (c.canCancel ? `<button class="b r" data-u="${c.courseId}">取消報名</button>` : '<span class="mu">已截止，如需異動請洽管理者</span>')
-            : `<button class="b" data-e="${c.courseId}" ${c.full || c.status !== '開放報名' ? 'disabled' : ''}>我要報名</button>`}
-        </div>
+        <div style="margin-top:8px">${c.sessions.map(s => `
+          <div class="sess">
+            ${s.mine ? '<span style="width:22px;text-align:center;color:var(--c)">✓</span>'
+              : `<input type="checkbox" value="${s.sessionId}" ${s.full ? 'disabled' : ''}>`}
+            <div class="grow">
+              <div>${s.date.slice(5).replace('-', '/')}（${wd(s.date)}）${s.start}–${s.end}${s.mine ? ' <span class="mu">已報名</span>' : ''}</div>
+              <div class="mu">${s.count}${c.minCount ? ' / ' + c.minCount : ''} 人${s.full ? '・額滿' : ''}${s.open === '已開課' && s.count ? `・每人約 ${money(s.share)} 元` : ''}
+                ${s.names.length ? `・<a href="#" data-n="${s.sessionId}">看名單</a>` : ''}</div>
+              <div class="hide" id="n_${s.sessionId}">${namesHtml(s.names)}</div>
+            </div>
+            <span class="tag t-${esc(s.open)}">${esc(s.open)}</span>
+          </div>`).join('')}</div>
+        ${left.length ? `<div class="btns">
+          <button class="b g" data-pick="${c.courseId}">報名勾選的場次</button>
+          <button class="b" data-all="${c.courseId}">報名整期（${left.length} 堂）</button></div>` : ''}
+      </div>`; }).join('');
+    $('#nlink').onclick = e => { e.preventDefault(); showNotice(false); };
+    app.querySelectorAll('[data-n]').forEach(a => a.onclick = e => { e.preventDefault(); $('#n_' + a.dataset.n).classList.toggle('hide'); });
+    const enroll = async (btn, payload, text) => {
+      if (!(await ensureNotice())) return;
+      if (!confirm(text + '\n\n報名後不可取消，確定報名？')) return;
+      btn.disabled = true;
+      try { const r = await api('enroll', payload); toast(r.message, 'ok'); viewCourses(); }
+      catch (e) { if (e.code === 'NEED_NOTICE') NOTICE_READ = false; toast(e.message, 'err'); btn.disabled = false; }
+    };
+    app.querySelectorAll('[data-all]').forEach(b => b.onclick = () => {
+      const c = d.courses.find(x => x.courseId === b.dataset.all);
+      enroll(b, { courseId: c.courseId, all: true }, `${c.name}\n報名整期，共 ${c.sessions.filter(s => !s.mine && !s.full).length} 堂`);
+    });
+    app.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => {
+      const card = b.closest('.card');
+      const ids = [...card.querySelectorAll('input[type=checkbox]:checked')].map(i => i.value);
+      if (!ids.length) return toast('請先勾選要報名的場次', 'err');
+      const c = d.courses.find(x => x.courseId === b.dataset.pick);
+      const dates = c.sessions.filter(s => ids.includes(s.sessionId)).map(s => s.date.slice(5).replace('-', '/')).join('、');
+      enroll(b, { courseId: c.courseId, sessionIds: ids }, `${c.name}\n報名：${dates}`);
+    });
+  } catch (e) { if (e.code !== 'NOT_BOUND') app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+/* ---------- 開課名單（所有員工都看得到） ---------- */
+async function viewOpened() {
+  app.innerHTML = '<div class="empty">載入中…</div>';
+  try {
+    const d = await api('opened');
+    if (!d.sessions.length) { app.innerHTML = '<div class="empty">近 30 天沒有已開課的場次</div>'; return; }
+    const t = todayStr();
+    app.innerHTML = `<div class="mu" style="margin:0 2px 10px">近 30 天已確定開課的場次與名單</div>` + d.sessions.map(s => `
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>${esc(s.courseName)}</h3>
+          <span class="tag t-${s.open === '停課' ? '停課' : '已開課'}">${esc(s.open === '停課' ? s.cancelText : '已開課')}</span></div>
+        <div class="mu">${s.date === t ? '<b style="color:var(--c)">今天</b>' : s.date}（${wd(s.date)}）${s.start}–${s.end}${s.teacher ? '｜' + esc(s.teacher) : ''}${s.location ? '｜' + esc(s.location) : ''}</div>
+        ${s.open === '停課' ? '' : `<div class="mu">共 ${s.count} 人・每人約 ${money(s.share)} 元</div>${namesHtml(s.names)}`}
       </div>`).join('');
-    app.querySelectorAll('[data-e]').forEach(b => b.onclick = async () => {
-      b.disabled = true;
-      try { const r = await api('enroll', { courseId: b.dataset.e }); toast(r.message, 'ok'); viewCourses(); } catch (e) { toast(e.message, 'err'); b.disabled = false; }
-    });
-    app.querySelectorAll('[data-u]').forEach(b => b.onclick = async () => {
-      if (!confirm('確定取消報名？')) return;
-      b.disabled = true;
-      try { const r = await api('unenroll', { courseId: b.dataset.u }); toast(r.message, 'ok'); viewCourses(); } catch (e) { toast(e.message, 'err'); b.disabled = false; }
-    });
   } catch (e) { if (e.code !== 'NOT_BOUND') app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
 
