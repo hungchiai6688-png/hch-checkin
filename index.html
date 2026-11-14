@@ -3,50 +3,50 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>運動課程打卡</title>
+<title>宏其婦幼員工運動管理</title>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
 <style>
-  :root { --c:#0b7a5a; --c2:#e6f4ef; --bd:#e1e6e4; --tx:#1f2a27; --mu:#6b7a75; --red:#c0392b; --bg:#f4f6f5; }
+  :root { --c:#a8566f; --c2:#f9ebef; --bd:#efe2e6; --tx:#3a2c31; --mu:#857379; --red:#c0392b; --bg:#fbf6f7; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body { margin:0; font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; background:var(--bg); color:var(--tx); font-size:16px; padding-bottom:76px; }
-  header { background:var(--c); color:#fff; padding:16px 16px 14px; }
+  header { background:linear-gradient(120deg,#b8657f,#9a5a8a); color:#fff; padding:16px 16px 14px; position:relative; }
   header h1 { margin:0; font-size:18px; font-weight:600; }
-  header .sub { font-size:13px; opacity:.85; margin-top:2px; }
+  header .sub { font-size:13px; opacity:.9; margin-top:2px; }
   main { padding:14px 16px; }
   .card { background:#fff; border:1px solid var(--bd); border-radius:14px; padding:14px; margin-bottom:12px; }
   .card h3 { margin:0 0 4px; font-size:16px; }
+  .card.tap { cursor:pointer; }
   .mu { color:var(--mu); font-size:13px; }
-  .tag { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; background:#eef1f0; color:var(--mu); vertical-align:middle; }
-  .t-出席,.t-上課中,.t-已開課 { background:#e3f5ec; color:#11704b; } .t-停課,.t-缺席,.t-未成團 { background:#fbe7e5; color:var(--red); }
-  .t-未打卡,.t-招生中 { background:#fff0d6; color:#a25f00; }
+  .tag { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; background:#f3eef0; color:var(--mu); vertical-align:middle; white-space:nowrap; }
+  .t-出席,.t-上課中,.t-已開課,.t-開放報名 { background:#e6f4ec; color:#2f7a52; } .t-停課,.t-缺席,.t-未成團 { background:#fbe7e5; color:var(--red); }
+  .t-未打卡,.t-招生中,.t-截止報名,.t-打卡中 { background:#fff0d6; color:#a25f00; }
+  .t-代課,.t-臨時 { background:#efe7f6; color:#7a4f9a; }
   .punch { display:grid; grid-template-columns:1fr; margin-top:12px; }
   .pbtn { border:0; border-radius:12px; padding:14px 6px; font-size:16px; font-weight:600; background:var(--c); color:#fff; }
-  .pbtn:disabled { background:#e5e9e8; color:#8a9692; font-weight:500; }
+  .pbtn:disabled { background:#eee6e9; color:#9a8a90; font-weight:500; }
   .pbtn small { display:block; font-size:12px; font-weight:400; margin-top:3px; }
   .b { border:0; border-radius:10px; padding:10px 14px; font-size:15px; background:var(--c); color:#fff; }
   .b.g { background:#fff; color:var(--c); border:1px solid var(--c); }
   .b.r { background:#fff; color:var(--red); border:1px solid var(--red); }
+  .b.sm { padding:5px 10px; font-size:13px; border-radius:8px; }
   .b:disabled { opacity:.5; }
-  input { width:100%; font-size:16px; padding:11px 12px; border:1px solid var(--bd); border-radius:10px; margin:6px 0 12px; }
-  .tabs { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--bd); display:flex; padding-bottom:env(safe-area-inset-bottom); }
-  .tabs button { flex:1; border:0; background:none; padding:12px 0 10px; font-size:14px; color:var(--mu); }
+  input, select { width:100%; font-size:16px; padding:11px 12px; border:1px solid var(--bd); border-radius:10px; margin:6px 0 12px; background:#fff; }
+  .tabs { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--bd); display:flex; padding-bottom:env(safe-area-inset-bottom); z-index:5; }
+  .tabs button { flex:1; border:0; background:none; padding:12px 0 10px; font-size:13px; color:var(--mu); }
   .tabs button.on { color:var(--c); font-weight:600; }
   .tabs i { display:block; font-style:normal; font-size:20px; line-height:1.1; }
-  .sum { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
-  .sum div { background:#fff; border:1px solid var(--bd); border-radius:12px; padding:10px; text-align:center; }
-  .sum b { display:block; font-size:22px; color:var(--c); }
+  .sum { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; }
+  .sum div { background:#fff; border:1px solid var(--bd); border-radius:12px; padding:10px 4px; text-align:center; }
+  .sum b { display:block; font-size:20px; color:var(--c); }
   .sum span { font-size:12px; color:var(--mu); }
   .li { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--bd); gap:8px; }
   .li:last-child { border-bottom:0; }
   .empty { text-align:center; color:var(--mu); padding:30px 10px; }
-  #toast { position:fixed; left:16px; right:16px; bottom:90px; background:#222; color:#fff; padding:12px 14px; border-radius:10px; z-index:9; display:none; text-align:center; }
+  #toast { position:fixed; left:16px; right:16px; bottom:90px; background:#222; color:#fff; padding:12px 14px; border-radius:10px; z-index:30; display:none; text-align:center; }
   #toast.err { background:var(--red); } #toast.ok { background:var(--c); }
   .row { display:flex; gap:8px; align-items:center; }
   .hide { display:none !important; }
-  .chips { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
-  .chips span { font-size:12px; background:var(--c2); color:var(--c); border-radius:6px; padding:2px 6px; }
-  header { position:relative; }
-  .nbtn { position:absolute; right:12px; top:14px; background:rgba(255,255,255,.18); color:#fff; border:0; border-radius:16px; padding:6px 10px; font-size:13px; }
+  .nbtn { position:absolute; right:12px; top:14px; background:rgba(255,255,255,.2); color:#fff; border:0; border-radius:16px; padding:6px 10px; font-size:13px; }
   .sess { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--bd); }
   .sess:last-child { border-bottom:0; }
   .sess input[type=checkbox] { width:22px; height:22px; margin:0; flex:none; }
@@ -56,25 +56,36 @@
   .names em { font-style:normal; color:var(--mu); font-size:12px; }
   .btns { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
   .btns .b { flex:1; }
-  #notice { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:20; display:none; align-items:flex-end; }
-  #notice .box { background:#fff; width:100%; max-height:88vh; overflow:auto; border-radius:16px 16px 0 0; padding:18px 16px calc(16px + env(safe-area-inset-bottom)); }
-  #notice h3 { margin:0 0 10px; font-size:17px; }
+  .back { color:var(--c); font-size:14px; margin-bottom:10px; display:inline-block; }
+  .stat2 { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px; }
+  .stat2 div { background:#fff; border:1px solid var(--bd); border-radius:12px; padding:10px 12px; }
+  .stat2 b { display:block; font-size:22px; color:var(--c); }
+  .stat2 span { font-size:12px; color:var(--mu); }
+  .stat2 small { display:block; font-size:12px; color:var(--mu); margin-top:2px; }
+  .sheet { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:20; display:none; align-items:flex-end; }
+  .sheet .box { background:#fff; width:100%; max-height:88vh; overflow:auto; border-radius:16px 16px 0 0; padding:18px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .sheet h3 { margin:0 0 10px; font-size:17px; }
   #notice ol { margin:0 0 14px; padding-left:22px; line-height:1.65; font-size:15px; }
   #notice li { margin-bottom:6px; }
+  .pick { max-height:45vh; overflow:auto; border:1px solid var(--bd); border-radius:10px; }
+  .pick label { display:flex; gap:10px; align-items:center; padding:10px; border-bottom:1px solid var(--bd); }
+  .pick input { width:20px; height:20px; margin:0; }
 </style>
 </head>
 <body>
-<header><h1>運動課程打卡</h1><div class="sub" id="sub">載入中…</div><button class="nbtn hide" id="nbtn">📋 注意事項</button></header>
+<header><h1>宏其婦幼員工運動管理</h1><div class="sub" id="sub">載入中…</div><button class="nbtn hide" id="nbtn">📋 注意事項</button></header>
 <main id="app"><div class="empty">載入中…</div></main>
 <nav class="tabs hide" id="tabs">
   <button data-t="home" class="on"><i>⏱</i>打卡</button>
   <button data-t="courses"><i>✍️</i>報名</button>
   <button data-t="opened"><i>👥</i>開課名單</button>
   <button data-t="history"><i>📊</i>我的紀錄</button>
+  <button data-t="admin" class="hide" id="tabAdmin"><i>🛠</i>管理</button>
 </nav>
 <div id="toast"></div>
-<div id="notice"><div class="box"><h3>員工運動課程注意事項</h3><ol id="nlist"></ol>
+<div id="notice" class="sheet"><div class="box"><h3>員工運動課程注意事項</h3><ol id="nlist"></ol>
   <button class="b" id="nok" style="width:100%">我已閱讀</button></div></div>
+<div id="sheet" class="sheet"><div class="box" id="sbox"></div></div>
 
 <script>
 /* ===================== 設定（部署時修改這兩行） ===================== */
@@ -89,14 +100,36 @@ const WD = ['日','一','二','三','四','五','六'];
 const wd = d => WD[new Date(d + 'T12:00:00+08:00').getUTCDay()];
 const money = n => (Number(n) || 0).toLocaleString('zh-TW');
 const todayStr = () => new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+const md = d => d.slice(5).replace('-', '/');
+const dlText = v => esc((v || '').replace('T', ' ').slice(5, 16).replace('-', '/'));
 const params = new URLSearchParams(location.search);
 const TEST_ID = params.get('test'); // 測試模式：?test=員工LINE測試代號（後台「測試模式」需設為「是」）
 let ID_TOKEN = null, CONFIG = {}, ME = null, TAB = 'home', NOTICE = [], NOTICE_READ = false;
+
+/* 畫面快取：切換分頁時先顯示上次的資料，背景再更新（不用每次等 3～5 秒） */
+const VC = {};
+let VIEW = '';
+function clearVC() { Object.keys(VC).forEach(k => delete VC[k]); }
+async function load(key, fetcher, render) {
+  VIEW = key;
+  if (VC[key]) render(VC[key]); else app.innerHTML = '<div class="empty">載入中…</div>';
+  try {
+    const d = await fetcher();
+    VC[key] = d;
+    if (VIEW === key) render(d);
+  } catch (e) {
+    if (e.code !== 'NOT_BOUND' && VIEW === key && !VC[key]) app.innerHTML = `<div class="empty">${esc(e.message)}</div>`;
+    else if (e.code !== 'NOT_BOUND') toast(e.message, 'err');
+  }
+}
 
 function toast(msg, type) {
   const t = $('#toast'); t.textContent = msg; t.className = type || ''; t.style.display = 'block';
   clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', type === 'err' ? 5000 : 2800);
 }
+function openSheet(html) { $('#sbox').innerHTML = html; $('#sheet').style.display = 'flex'; }
+function closeSheet() { $('#sheet').style.display = 'none'; }
+$('#sheet').onclick = e => { if (e.target.id === 'sheet') closeSheet(); };
 
 async function api(action, data) {
   const body = Object.assign({ action, idToken: ID_TOKEN, testUserId: TEST_ID || undefined }, data || {});
@@ -112,6 +145,7 @@ async function api(action, data) {
   }
   return r.data;
 }
+const adm = (op, data) => api('admin', { op, data: data || {} });
 
 async function init() {
   try {
@@ -125,20 +159,25 @@ async function init() {
     NOTICE = me.notice || []; NOTICE_READ = !!me.noticeRead;
     if (!me.bound) { $('#sub').textContent = (me.lineName || '') + '，請先完成註冊'; showBind(); return; }
     setMe(me.employee);
+    if (me.home) VC.home = me.home; // 首頁資料已一起帶回
     show('home');
   } catch (e) {
     app.innerHTML = `<div class="card"><h3>無法開啟</h3><div class="mu">${esc(e.message)}</div></div>`;
   }
 }
-function setMe(emp) { ME = emp; $('#sub').textContent = `${emp.name}（${emp.empId}）${emp.dept ? '｜' + emp.dept : ''}`; $('#tabs').classList.remove('hide'); $('#nbtn').classList.remove('hide'); }
+function setMe(emp) {
+  ME = emp;
+  $('#sub').textContent = `${emp.name}（${emp.empId}）${emp.dept ? '｜' + emp.dept : ''}`;
+  $('#tabs').classList.remove('hide'); $('#nbtn').classList.remove('hide');
+  $('#tabAdmin').classList.toggle('hide', !emp.adminRole);
+}
 
 /* ---------- 注意事項 ---------- */
-// 按右上角按鈕可隨時查看；第一次報名前必須按「我已閱讀」
 function showNotice(mustAck) {
   return new Promise(resolve => {
     $('#nlist').innerHTML = NOTICE.length ? NOTICE.map(l => `<li>${esc(l)}</li>`).join('') : '<li>（管理者尚未設定注意事項）</li>';
     const ok = $('#nok');
-    ok.textContent = mustAck ? '我已閱讀，繼續報名' : (NOTICE_READ ? '關閉' : '我已閱讀');
+    ok.textContent = mustAck ? '我已閱讀，繼續' : (NOTICE_READ ? '關閉' : '我已閱讀');
     $('#notice').style.display = 'flex';
     $('#notice').onclick = e => { if (e.target.id === 'notice' && !mustAck) { $('#notice').style.display = 'none'; resolve(false); } };
     ok.onclick = async () => {
@@ -171,7 +210,7 @@ function showBind() {
     $('#bb').disabled = true;
     try {
       const r = await api('bind', { empId, name, dept: $('#bd').value.trim() }); setMe(r.employee); toast('註冊成功', 'ok');
-      const me = await api('me'); NOTICE = me.notice || []; NOTICE_READ = !!me.noticeRead;
+      const me = await api('me'); NOTICE = me.notice || []; NOTICE_READ = !!me.noticeRead; if (me.home) VC.home = me.home;
       show('home'); if (!NOTICE_READ) showNotice(false);
     }
     catch (e) { if (e.code !== 'NOT_BOUND') toast(e.message, 'err'); $('#bb').disabled = false; }
@@ -184,14 +223,12 @@ function show(t) {
   TAB = t;
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   window.scrollTo(0, 0);
-  ({ home: viewHome, courses: viewCourses, opened: viewOpened, history: viewHistory })[t]();
+  ({ home: viewHome, courses: viewCourses, opened: viewOpened, history: viewHistory, admin: viewAdmin })[t]();
 }
 
 /* ---------- 打卡 ---------- */
-async function viewHome() {
-  app.innerHTML = '<div class="empty">載入中…</div>';
-  try {
-    const d = await api('home');
+function viewHome() {
+  load('home', () => api('home'), d => {
     if (!d.sessions.length) { app.innerHTML = '<div class="empty">近兩週沒有您的課程<br><br><button class="b g" onclick="show(\'courses\')">去報名課程</button></div>'; return; }
     const t = todayStr();
     app.innerHTML = d.sessions.map(s => `
@@ -202,10 +239,12 @@ async function viewHome() {
         <div class="punch">
           <button class="pbtn" data-p="${s.sessionId}" ${s.canIn ? '' : 'disabled'}>上課打卡<small>${s.inTime ? '✓ 已打卡 ' + s.inTime.slice(11, 16) : esc(s.hint)}</small></button>
         </div>
-        <div class="mu" style="margin-top:8px">${s.cancelled ? '' : `打卡時間 ${s.windowText}・`}名單 ${s.rosterCount} 人${s.minCount ? '（' + s.minCount + ' 人開課）' : ''}${s.cancelled ? '' : `・每人分攤約 ${money(s.share)} 元`}</div>
+        <div class="mu" style="margin-top:8px">${s.cancelled ? '' : `打卡時間 ${s.windowText}・`}名單 ${s.rosterCount} 人${s.minCount ? '（' + s.minCount + ' 人開課）' : ''}${s.cancelled ? '' : `・每人約 ${money(s.share)} 元・出席得 ${s.points} 點`}
+          ・<a href="#" data-sd="${s.sessionId}">看名單</a></div>
       </div>`).join('');
     app.querySelectorAll('[data-p]').forEach(b => b.onclick = () => punch(b));
-  } catch (e) { if (e.code !== 'NOT_BOUND') app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+    app.querySelectorAll('[data-sd]').forEach(a => a.onclick = e => { e.preventDefault(); viewSession(a.dataset.sd, 'home'); });
+  });
 }
 
 function homeTag(s) {
@@ -238,34 +277,71 @@ async function punch(btn) {
     btn.firstChild.textContent = '送出中…';
     const r = await api('punch', Object.assign({ sessionId, type }, pos));
     toast(r.message, 'ok');
-    viewHome();
+    clearVC(); viewHome();
   } catch (e) {
     toast(e.message, 'err'); btn.disabled = false; btn.firstChild.textContent = label;
   }
 }
 
-/* ---------- 報名 ---------- */
-// 每門課列出本期可報名的場次：可「報名整期」或勾選單堂；報名後不可自行取消
-async function viewCourses() {
+/* ---------- 單堂明細：看名單、代課、臨時報名 ---------- */
+async function viewSession(sessionId, from) {
+  VIEW = 'session';
+  window.scrollTo(0, 0);
   app.innerHTML = '<div class="empty">載入中…</div>';
-  try {
-    const d = await api('courses');
+  let d;
+  try { d = await api('session', { sessionId }); } catch (e) { app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  if (VIEW !== 'session') return;
+  const s = d.session;
+  const back = from === 'admin' ? '管理' : from === 'opened' ? '開課名單' : '打卡';
+  app.innerHTML = `<a href="#" class="back" id="bk">← 回${back}</a>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h3>${esc(s.courseName)}</h3>${homeTag(s)}</div>
+      <div class="mu">${s.date}（${wd(s.date)}）${s.start}–${s.end}${s.teacher ? '｜' + esc(s.teacher) : ''}${s.location ? '｜' + esc(s.location) : ''}</div>
+      <div class="mu">本堂 ${money(s.fee)} 元${s.pct ? `（公司補助 ${s.pct}%）` : ''}・名單 ${s.rosterCount} 人・每人約 ${money(s.share)} 元・出席得 ${s.points} 點</div>
+      ${d.canJoin ? `<div class="btns"><button class="b" id="tj">＋ 我要臨時報名這堂（約 ${money(d.joinShare)} 元）</button></div>` : ''}
+    </div>
+    <div class="card"><h3>名單</h3>
+      ${d.people.length ? d.people.map(p => `<div class="li"><div>${esc(p.name)} <span class="mu">${esc(p.dept)}</span>
+          ${/代課/.test(p.source) ? '<span class="tag t-代課">代課</span>' : /臨時/.test(p.source) ? '<span class="tag t-臨時">臨時</span>' : ''}
+          ${p.inTime ? `<div class="mu">✓ 已打卡 ${p.inTime.slice(11, 16)}</div>` : ''}</div>
+        <div>${p.me ? '<span class="tag t-出席">我</span>' : (d.canSub && !p.inTime ? `<button class="b sm g" data-sub="${esc(p.empId)}" data-nm="${esc(p.name)}">我來代上</button>` : '')}</div></div>`).join('')
+        : '<div class="empty">目前沒有人報名</div>'}
+      ${d.canSub ? '<div class="mu" style="margin-top:8px">同仁無法上課時，按他名字旁的「我來代上」，名單會換成您，這堂費用改算在您身上。</div>' : ''}
+    </div>`;
+  $('#bk').onclick = e => { e.preventDefault(); show(from === 'admin' ? 'admin' : from || 'home'); };
+  if ($('#tj')) $('#tj').onclick = async () => {
+    if (!(await ensureNotice())) return;
+    if (!confirm(`臨時報名 ${s.courseName} ${md(s.date)} ${s.start}？\n費用會依新的人數重新分攤（約 ${money(d.joinShare)} 元）。`)) return;
+    try { const r = await api('tempJoin', { sessionId }); toast(r.message, 'ok'); clearVC(); viewSession(sessionId, from); } catch (e) { toast(e.message, 'err'); }
+  };
+  app.querySelectorAll('[data-sub]').forEach(b => b.onclick = async () => {
+    if (!(await ensureNotice())) return;
+    if (!confirm(`由您代替「${b.dataset.nm}」上 ${md(s.date)} 這堂課？\n名單會換成您，這堂費用改算在您身上。`)) return;
+    b.disabled = true;
+    try { const r = await api('substitute', { sessionId, empId: b.dataset.sub }); toast(r.message, 'ok'); clearVC(); viewSession(sessionId, from); }
+    catch (e) { if (e.code === 'NEED_NOTICE') NOTICE_READ = false; toast(e.message, 'err'); b.disabled = false; }
+  });
+}
+
+/* ---------- 報名 ---------- */
+function viewCourses() {
+  load('courses', () => api('courses'), d => {
     if (!d.courses.length) { app.innerHTML = '<div class="empty">目前沒有開放報名的課程</div>'; return; }
-    app.innerHTML = `<div class="mu" style="margin:0 2px 10px">⚠️ 報名後不可取消，無法上課請找同事代課，或先把費用交給班長。<a href="#" id="nlink">看注意事項</a></div>` +
+    app.innerHTML = `<div class="mu" style="margin:0 2px 10px">⚠️ 報名後不可取消，無法上課請找同事代課（同事在「開課名單」點那堂課按「我來代上」）。<a href="#" id="nlink">看注意事項</a></div>` +
       d.courses.map(c => {
         const left = c.sessions.filter(s => !s.mine && !s.full);
         return `<div class="card" data-c="${c.courseId}">
         <div class="row" style="justify-content:space-between"><h3>${esc(c.name)}</h3>
           ${c.mineCount ? `<span class="tag t-出席">已報 ${c.mineCount} 堂</span>` : ''}</div>
         <div class="mu">${c.teacher ? '老師：' + esc(c.teacher) : ''}${c.location ? '｜' + esc(c.location) : ''}</div>
-        <div class="mu">每堂 ${money(c.fee)} 元，依人數均分（無條件進位）${c.minCount ? `｜${c.minCount} 人以上開課` : ''}</div>
-        ${c.deadline ? `<div class="mu">報名截止：${esc(c.deadline.replace('T', ' '))}</div>` : ''}
+        <div class="mu">每堂 ${money(c.fee)} 元${c.pct ? `，公司補助 ${c.pct}%` : ''}，其餘依人數均分（無條件進位）・出席得 ${c.points} 點${c.minCount ? `｜${c.minCount} 人以上開課` : ''}</div>
+        ${c.deadline ? `<div class="mu">報名截止：<b>${esc(c.deadline.replace('T', ' '))}</b></div>` : ''}
         <div style="margin-top:8px">${c.sessions.map(s => `
           <div class="sess">
             ${s.mine ? '<span style="width:22px;text-align:center;color:var(--c)">✓</span>'
               : `<input type="checkbox" value="${s.sessionId}" ${s.full ? 'disabled' : ''}>`}
             <div class="grow">
-              <div>${s.date.slice(5).replace('-', '/')}（${wd(s.date)}）${s.start}–${s.end}${s.mine ? ' <span class="mu">已報名</span>' : ''}</div>
+              <div>${md(s.date)}（${wd(s.date)}）${s.start}–${s.end}${s.mine ? ' <span class="mu">已報名</span>' : ''}</div>
               <div class="mu">${s.count}${c.minCount ? ' / ' + c.minCount : ''} 人${s.full ? '・額滿' : ''}${s.open === '已開課' && s.count ? `・每人約 ${money(s.share)} 元` : ''}
                 ${s.names.length ? `・<a href="#" data-n="${s.sessionId}">看名單</a>` : ''}</div>
               <div class="hide" id="n_${s.sessionId}">${namesHtml(s.names)}</div>
@@ -282,7 +358,7 @@ async function viewCourses() {
       if (!(await ensureNotice())) return;
       if (!confirm(text + '\n\n報名後不可取消，確定報名？')) return;
       btn.disabled = true;
-      try { const r = await api('enroll', payload); toast(r.message, 'ok'); viewCourses(); }
+      try { const r = await api('enroll', payload); toast(r.message, 'ok'); clearVC(); viewCourses(); }
       catch (e) { if (e.code === 'NEED_NOTICE') NOTICE_READ = false; toast(e.message, 'err'); btn.disabled = false; }
     };
     app.querySelectorAll('[data-all]').forEach(b => b.onclick = () => {
@@ -294,54 +370,201 @@ async function viewCourses() {
       const ids = [...card.querySelectorAll('input[type=checkbox]:checked')].map(i => i.value);
       if (!ids.length) return toast('請先勾選要報名的場次', 'err');
       const c = d.courses.find(x => x.courseId === b.dataset.pick);
-      const dates = c.sessions.filter(s => ids.includes(s.sessionId)).map(s => s.date.slice(5).replace('-', '/')).join('、');
+      const dates = c.sessions.filter(s => ids.includes(s.sessionId)).map(s => md(s.date)).join('、');
       enroll(b, { courseId: c.courseId, sessionIds: ids }, `${c.name}\n報名：${dates}`);
     });
-  } catch (e) { if (e.code !== 'NOT_BOUND') app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+  });
 }
 
-/* ---------- 開課名單（所有員工都看得到） ---------- */
-async function viewOpened() {
-  app.innerHTML = '<div class="empty">載入中…</div>';
-  try {
-    const d = await api('opened');
+/* ---------- 開課名單（所有員工都看得到；點進去可代課／臨時報名） ---------- */
+function viewOpened() {
+  load('opened', () => api('opened'), d => {
     if (!d.sessions.length) { app.innerHTML = '<div class="empty">近 30 天沒有已開課的場次</div>'; return; }
     const t = todayStr();
-    app.innerHTML = `<div class="mu" style="margin:0 2px 10px">近 30 天已確定開課的場次與名單</div>` + d.sessions.map(s => `
-      <div class="card">
+    app.innerHTML = `<div class="mu" style="margin:0 2px 10px">近 30 天已確定開課的場次。點課程可以「代課」或「臨時報名」。</div>` + d.sessions.map(s => `
+      <div class="card tap" data-sd="${s.sessionId}">
         <div class="row" style="justify-content:space-between"><h3>${esc(s.courseName)}</h3>
-          <span class="tag t-${s.open === '停課' ? '停課' : '已開課'}">${esc(s.open === '停課' ? s.cancelText : '已開課')}</span></div>
+          <span class="tag t-${s.open === '停課' ? '停課' : '已開課'}">${esc(s.open === '停課' ? s.cancelText : (s.mine ? '已開課・有我' : '已開課'))}</span></div>
         <div class="mu">${s.date === t ? '<b style="color:var(--c)">今天</b>' : s.date}（${wd(s.date)}）${s.start}–${s.end}${s.teacher ? '｜' + esc(s.teacher) : ''}${s.location ? '｜' + esc(s.location) : ''}</div>
-        ${s.open === '停課' ? '' : `<div class="mu">共 ${s.count} 人・每人約 ${money(s.share)} 元</div>${namesHtml(s.names)}`}
+        ${s.open === '停課' ? '' : `<div class="mu">共 ${s.count} 人・每人約 ${money(s.share)} 元　<span style="color:var(--c)">點我代課／臨時報名 ›</span></div>${namesHtml(s.names)}`}
       </div>`).join('');
-  } catch (e) { if (e.code !== 'NOT_BOUND') app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+    app.querySelectorAll('[data-sd]').forEach(c => c.onclick = () => viewSession(c.dataset.sd, 'opened'));
+  });
 }
 
 /* ---------- 我的紀錄 ---------- */
-async function viewHistory(from, to) {
+function viewHistory(from, to) {
   const t = todayStr();
   from = from || t.slice(0, 8) + '01'; to = to || t;
-  app.innerHTML = '<div class="empty">載入中…</div>';
-  try {
-    const d = await api('history', { from, to });
+  load('history|' + from + '|' + to, () => api('history', { from, to }), d => {
     const s = d.summary;
     app.innerHTML = `
       <div class="card"><div class="row"><input type="date" id="hf" value="${d.from}" style="margin:0"><span>～</span><input type="date" id="ht" value="${d.to}" style="margin:0"></div>
         <div class="row" style="margin-top:8px"><button class="b g" id="hm">本月</button><button class="b g" id="hp">上個月</button><button class="b" id="hq" style="margin-left:auto">查詢</button></div></div>
-      <div class="sum"><div><b>${s.attended}</b><span>出席次數</span></div><div><b>${s.absent}</b><span>缺席</span></div><div><b>${money(s.fee)}</b><span>費用（元）</span></div></div>
+      <div class="sum"><div><b>${s.attended}</b><span>出席</span></div><div><b>${s.absent}</b><span>缺席</span></div><div><b>${money(s.fee)}</b><span>費用(元)</span></div><div><b>${s.points || 0}</b><span>點數</span></div></div>
       <div class="card">${d.details.length ? d.details.map(x => `
         <div class="li"><div><div>${esc(x.courseName)}</div><div class="mu">${x.date}（${wd(x.date)}）${x.start}–${x.end}
-          ${x.inTime ? `<br>打卡 ${x.inTime.slice(11, 16)}` : ''}</div></div>
-          <div style="text-align:right"><span class="tag t-${esc(x.status)}">${esc(x.status)}</span><div class="mu">${x.fee ? money(x.fee) + ' 元' : ''}</div></div></div>`).join('')
+          ${x.inTime ? `<br>打卡 ${x.inTime.slice(11, 16)}` : ''}${/代課|臨時/.test(x.source) ? `<br>${esc(x.source)}` : ''}</div></div>
+          <div style="text-align:right"><span class="tag t-${esc(x.status)}">${esc(x.status)}</span><div class="mu">${x.fee ? money(x.fee) + ' 元' : ''}${x.points ? '・' + x.points + ' 點' : ''}</div></div></div>`).join('')
         : '<div class="empty">這段期間沒有上課紀錄</div>'}</div>
-      <div class="mu" style="text-align:center">費用＝每堂費用 ÷ 名單人數（無條件進位），打卡時間結束後才結算</div>`;
+      <div class="mu" style="text-align:center">費用＝（每堂費用 − 公司補助）÷ 名單人數（無條件進位），打卡時間結束後才結算；有打卡出席才有點數</div>`;
     $('#hq').onclick = () => viewHistory($('#hf').value, $('#ht').value);
     $('#hm').onclick = () => viewHistory(t.slice(0, 8) + '01', t);
     $('#hp').onclick = () => {
       const d0 = new Date(t.slice(0, 8) + '01T12:00:00+08:00'); d0.setUTCDate(0);
       const last = d0.toISOString().slice(0, 10); viewHistory(last.slice(0, 8) + '01', last);
     };
-  } catch (e) { if (e.code !== 'NOT_BOUND') app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+  });
+}
+
+/* ===================== 管理（員工資料「管理權限」有設定的人才看得到） ===================== */
+const CANCEL_REASONS = ['颱風', '開課人數不足', '老師請假', '其他'];
+let ADMIN_TAB = 'dash';
+
+function adminNav() {
+  return `<div class="btns" style="margin:0 0 12px">${[['dash', '總覽'], ['courses', '課程']].map(([k, n]) =>
+    `<button class="b sm ${ADMIN_TAB === k ? '' : 'g'}" data-at="${k}">${n}</button>`).join('')}</div>`;
+}
+function bindAdminNav() { app.querySelectorAll('[data-at]').forEach(b => b.onclick = () => { ADMIN_TAB = b.dataset.at; viewAdmin(); }); }
+
+function viewAdmin() {
+  if (ADMIN_TAB === 'courses') return adminCourses();
+  load('adm_dash', () => adm('dashboard'), d => {
+    const c = d.counts;
+    app.innerHTML = adminNav() + `
+      <div class="stat2">
+        <div><b>${c.opened}</b><span>已開課堂數（今天起）</span></div>
+        <div><b>${c.enrollSessions}</b><span>開放報名中（堂）</span><small>${c.deadlines.length ? c.deadlines.map(x => '截止 ' + dlText(x.deadline)).join('<br>') : '目前沒有'}</small></div>
+        <div><b>${c.employees}</b><span>員工人數</span></div>
+        <div><b>${c.unbound}</b><span>尚未綁定 LINE</span></div>
+      </div>
+      <div class="card"><h3>未來 7 天場次</h3>
+        ${d.sessions.length ? d.sessions.map(s => `<div class="li tap" data-as="${s.sessionId}" style="cursor:pointer"><div><div>${esc(s.courseName)}</div>
+          <div class="mu">${md(s.date)}（${wd(s.date)}）${s.start}–${s.end}・名單 ${s.rosterCount}・打卡 ${s.attended}</div></div>
+          <span class="tag t-${esc(s.cancelled ? (s.open === '未成團' ? '未成團' : '停課') : s.open)}">${esc(s.cancelled ? s.cancelText : s.open)}</span></div>`).join('')
+        : '<div class="empty">近 7 天沒有場次</div>'}</div>
+      <div class="mu" style="text-align:center">產生下個月課程、員工管理、列印、匯出報表請用電腦版後台</div>`;
+    bindAdminNav();
+    app.querySelectorAll('[data-as]').forEach(x => x.onclick = () => adminSession(x.dataset.as));
+  });
+}
+
+function adminCourses() {
+  load('adm_courses', () => adm('listCourses'), list => {
+    app.innerHTML = adminNav() + (list.length ? list.map(c => `
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h3>${esc(c.name)}</h3><span class="tag t-${esc(c.effStatus)}">${esc(c.effStatus)}</span></div>
+        <div class="mu">${esc(c.teacher)}｜本期 ${esc(c.period)}・${c.sessionCount} 堂・已開課 ${c.openedCount}・報名 ${c.enrolled} 人</div>
+        <div class="mu">每堂 ${money(c.fee)} 元${c.subsidyPct ? `・公司 ${c.subsidyPct}%` : ''}・${c.points} 點${c.deadline ? '・截止 ' + dlText(c.deadline) : ''}</div>
+        <div class="btns">
+          <button class="b sm g" data-ac="${c.courseId}">場次</button>
+          <button class="b sm g" data-ae="${c.courseId}">編輯</button>
+          ${c.status === '開放報名' ? `<button class="b sm g" data-ast="${c.courseId}" data-v="截止報名">截止報名</button>` : `<button class="b sm" data-ast="${c.courseId}" data-v="開放報名">開放報名</button>`}
+        </div></div>`).join('') : '<div class="empty">還沒有課程</div>');
+    bindAdminNav();
+    app.querySelectorAll('[data-ac]').forEach(b => b.onclick = () => adminCourse(b.dataset.ac));
+    app.querySelectorAll('[data-ae]').forEach(b => b.onclick = () => adminCourseForm(list.find(c => c.courseId === b.dataset.ae)));
+    app.querySelectorAll('[data-ast]').forEach(b => b.onclick = async () => {
+      if (!confirm(`改為「${b.dataset.v}」？`)) return;
+      try { const r = await adm('setCourseStatus', { courseId: b.dataset.ast, status: b.dataset.v }); toast(r.message, 'ok'); clearVC(); adminCourses(); } catch (e) { toast(e.message, 'err'); }
+    });
+  });
+}
+
+function adminCourseForm(c) {
+  openSheet(`<h3>編輯：${esc(c.name)}</h3><div id="acf">
+    <label class="mu">老師</label><input name="teacher" value="${esc(c.teacher)}">
+    <label class="mu">每堂費用（元）</label><input name="fee" type="number" min="0" value="${esc(c.fee)}">
+    <label class="mu">公司補助比例（%）</label><input name="subsidyPct" type="number" min="0" max="100" value="${esc(c.subsidyPct)}">
+    <label class="mu">每堂點數（出席才給）</label><input name="points" type="number" min="0" step="0.5" value="${esc(c.points)}">
+    <label class="mu">最低開課人數</label><input name="minCount" type="number" min="0" value="${esc(c.minCount)}">
+    <label class="mu">人數上限（空白＝不限）</label><input name="capacity" type="number" min="0" value="${esc(c.capacity)}">
+    <label class="mu">報名截止</label><input name="deadline" type="datetime-local" value="${esc(c.deadline)}"></div>
+    <div class="btns"><button class="b" id="acok">儲存</button><button class="b g" onclick="closeSheet()">取消</button></div>`);
+  $('#acok').onclick = async () => {
+    const d = { courseId: c.courseId, name: c.name };
+    $('#acf').querySelectorAll('[name]').forEach(i => d[i.name] = i.value.trim());
+    try { await adm('saveCourse', d); toast('已儲存', 'ok'); closeSheet(); clearVC(); adminCourses(); } catch (e) { toast(e.message, 'err'); }
+  };
+}
+
+async function adminCourse(courseId) {
+  VIEW = 'adm_course'; window.scrollTo(0, 0);
+  app.innerHTML = '<div class="empty">載入中…</div>';
+  let d;
+  try { d = await adm('getCourse', { courseId }); } catch (e) { app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  if (VIEW !== 'adm_course') return;
+  app.innerHTML = `<a href="#" class="back" id="bk">← 回課程</a>
+    <div class="card"><h3>${esc(d.course.name)}　${esc(d.period)}</h3>
+      ${d.sessions.map(s => `<div class="li" data-as="${s.sessionId}" style="cursor:pointer"><div><div>${md(s.date)}（${wd(s.date)}）${s.start}–${s.end}</div>
+        <div class="mu">名單 ${s.rosterCount}・打卡 ${s.attended}${s.open === '已開課' ? '・每人 ' + money(s.share) + ' 元' : ''}</div></div>
+        <span class="tag t-${esc(s.cancelled ? (s.open === '未成團' ? '未成團' : '停課') : s.open)}">${esc(s.cancelled ? s.cancelText : s.open)}</span></div>`).join('') || '<div class="empty">這個月份沒有場次</div>'}
+    </div>`;
+  $('#bk').onclick = e => { e.preventDefault(); ADMIN_TAB = 'courses'; show('admin'); };
+  app.querySelectorAll('[data-as]').forEach(x => x.onclick = () => adminSession(x.dataset.as, courseId));
+}
+
+async function adminSession(sessionId, courseId) {
+  VIEW = 'adm_session'; window.scrollTo(0, 0);
+  app.innerHTML = '<div class="empty">載入中…</div>';
+  let d;
+  try { d = await adm('getSession', { sessionId }); } catch (e) { app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  if (VIEW !== 'adm_session') return;
+  const s = d.session;
+  const reload = () => { clearVC(); adminSession(sessionId, courseId); };
+  const act = async (op, data, ok) => { try { const r = await adm(op, data); toast(r.message || ok || '完成', 'ok'); reload(); } catch (e) { toast(e.message, 'err'); } };
+  app.innerHTML = `<a href="#" class="back" id="bk">← 回${courseId ? '場次列表' : '管理'}</a>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h3>${esc(d.course.name)}</h3>
+        <span class="tag t-${esc(s.cancelled ? (s.open === '未成團' ? '未成團' : '停課') : s.open)}">${esc(s.cancelled ? s.cancelText : s.open)}</span></div>
+      <div class="mu">${s.date}（${wd(s.date)}）${s.start}–${s.end}・${esc(s.phase)}</div>
+      <div class="mu">名單 ${s.rosterCount}・已打卡 ${s.attended}・本堂 ${money(s.fee)} 元${s.company ? `（公司 ${money(s.company)}）` : ''}・員工每人 ${money(s.share)} 元</div>
+      <div class="btns">
+        <button class="b sm" id="aadd">＋ 臨時加人</button>
+        ${s.status === '停課' ? '<button class="b sm g" id="aon">恢復上課</button>' : '<button class="b sm r" id="aoff">停課</button>'}
+        ${s.status !== '停課' && s.open !== '已開課' ? '<button class="b sm g" id="acf">確認開課</button>' : ''}
+      </div></div>
+    <div class="card"><h3>名單與打卡</h3>
+      ${d.people.map(p => `<div class="li"><div>${esc(p.name)} <span class="mu">${esc(p.empId)}</span>
+          ${/代課/.test(p.source) ? '<span class="tag t-代課">代課</span>' : /臨時/.test(p.source) ? '<span class="tag t-臨時">臨時</span>' : ''}
+          <div class="mu"><span class="tag t-${esc(p.status)}">${esc(p.status)}</span> ${p.inTime ? p.inTime.slice(11, 16) + (p.inMethod === '補登' ? ' 補登' : '') : ''}</div></div>
+        <div class="row">${p.inTime ? `<button class="b sm g" data-dp="${esc(p.empId)}">作廢打卡</button>`
+          : `<button class="b sm g" data-mp="${esc(p.empId)}">補登</button><button class="b sm r" data-rm="${esc(p.empId)}" data-nm="${esc(p.name)}">移出</button>`}</div></div>`).join('') || '<div class="empty">名單是空的</div>'}
+      <div class="mu" style="margin-top:8px">「移出」只影響這一堂（例如報了名但沒來、要從紀錄刪掉），費用自動依新人數重算。</div>
+    </div>`;
+  $('#bk').onclick = e => { e.preventDefault(); courseId ? adminCourse(courseId) : show('admin'); };
+  app.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {
+    if (confirm(`將 ${b.dataset.nm} 移出 ${md(s.date)} 這一堂？費用會改由其他人分攤。`)) act('removeFromSession', { sessionId, empId: b.dataset.rm });
+  });
+  app.querySelectorAll('[data-dp]').forEach(b => b.onclick = () => { if (confirm('作廢這筆打卡？（紀錄會保留並標示作廢）')) act('deletePunch', { sessionId, empId: b.dataset.dp }); });
+  app.querySelectorAll('[data-mp]').forEach(b => b.onclick = () => {
+    const reason = prompt('補登原因（例：手機沒電，現場確認有出席）');
+    if (reason && reason.trim()) act('manualPunch', { sessionId, empId: b.dataset.mp, time: s.start, reason: reason.trim() });
+  });
+  if ($('#aoff')) $('#aoff').onclick = () => {
+    openSheet(`<h3>這一堂停課</h3>${CANCEL_REASONS.map((r, i) => `<label class="row" style="padding:8px 0"><input type="radio" name="cr" value="${r}" ${i ? '' : 'checked'} style="width:20px;margin:0">${r}</label>`).join('')}
+      <input id="cro" placeholder="其他原因（選「其他」時填寫）">
+      <div class="btns"><button class="b r" id="crok">確定停課</button><button class="b g" onclick="closeSheet()">取消</button></div>`);
+    $('#crok').onclick = () => { let r = document.querySelector('[name=cr]:checked').value; if (r === '其他' && $('#cro').value.trim()) r = $('#cro').value.trim(); closeSheet(); act('setSessionStatus', { sessionId, status: '停課', reason: r }); };
+  };
+  if ($('#aon')) $('#aon').onclick = () => act('setSessionStatus', { sessionId, status: '正常' });
+  if ($('#acf')) $('#acf').onclick = () => { if (confirm('人數未達門檻，確認同事都同意多攤費用後再開課。確定開課？')) act('confirmSession', { sessionId, confirm: true }); };
+  $('#aadd').onclick = async () => {
+    let emps;
+    try { emps = VC.adm_emps || (VC.adm_emps = await adm('listEmployees')); } catch (e) { return toast(e.message, 'err'); }
+    const inList = new Set(d.people.map(p => p.empId));
+    openSheet(`<h3>臨時加入 ${md(s.date)}</h3><input id="aq" placeholder="搜尋姓名、員編、單位"><div class="pick" id="apl"></div>
+      <div class="btns"><button class="b" id="aok">加入勾選的人</button><button class="b g" onclick="closeSheet()">取消</button></div>`);
+    const picked = new Set();
+    const draw = () => {
+      const q = $('#aq').value.trim().toLowerCase();
+      $('#apl').innerHTML = emps.filter(e => e.status !== '停用' && !inList.has(e.empId) && (!q || (e.empId + e.name + e.dept).toLowerCase().includes(q))).slice(0, 80)
+        .map(e => `<label><input type="checkbox" value="${esc(e.empId)}" ${picked.has(e.empId) ? 'checked' : ''}><b>${esc(e.name)}</b><span class="mu">${esc(e.empId)} ${esc(e.dept)}</span></label>`).join('') || '<div class="empty">查無員工</div>';
+      $('#apl').querySelectorAll('input').forEach(i => i.onchange = () => { i.checked ? picked.add(i.value) : picked.delete(i.value); });
+    };
+    $('#aq').oninput = draw; draw();
+    $('#aok').onclick = () => { if (!picked.size) return toast('請勾選員工', 'err'); closeSheet(); act('addToRoster', { courseId: d.course.courseId, sessionId, empIds: [...picked] }); };
+  };
 }
 
 init();
